@@ -1,103 +1,78 @@
-import Image from "next/image";
+// src/app/page.tsx
+import GoogleSignin from "@/components/google-signin";
+import { getServerAuthSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+export default async function LandingPage() {
+  const session = await getServerAuthSession();
+  if (session?.user) redirect("/onboarding");
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="min-h-screen bg-gray-50 text-gray-900">
+      <div className="mx-auto max-w-5xl px-6">
+        <header className="flex items-center justify-between py-6">
+          <div className="text-xl font-semibold tracking-tight">StudyMatch</div>
+          <div className="hidden sm:block">
+            <GoogleSignin />
+          </div>
+        </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        <section className="grid gap-8 py-16 md:grid-cols-2 md:items-center">
+          <div>
+            <h1 className="text-4xl font-bold leading-tight md:text-5xl">
+              Find your <span className="text-blue-600">study partner</span> in minutes
+            </h1>
+            <p className="mt-4 text-lg text-gray-600">
+              Pick what you want to learn and what you can teach. We’ll match you by topics and timezones.
+            </p>
+            <div className="mt-8 sm:hidden">
+              <GoogleSignin />
+            </div>
+            <div className="mt-8 hidden sm:flex">
+              <GoogleSignin />
+            </div>
+            <ul className="mt-6 space-y-2 text-sm text-gray-600">
+              <li>• Google login, no passwords</li>
+              <li>• Learn/Teach subject picker</li>
+              <li>• Smart matches with instant contact</li>
+            </ul>
+          </div>
+
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl bg-gray-100 p-4">
+              <div className="mb-3 h-4 w-24 rounded bg-gray-300" />
+              <div className="mb-2 h-3 w-40 rounded bg-gray-300" />
+              <div className="mb-6 h-3 w-32 rounded bg-gray-300" />
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-200">
+                    <div className="mb-2 h-4 w-28 rounded bg-gray-200" />
+                    <div className="flex gap-2">
+                      <span className="h-5 w-12 rounded-full bg-blue-100" />
+                      <span className="h-5 w-16 rounded-full bg-emerald-100" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-between">
+              <div className="h-3 w-24 rounded bg-gray-200" />
+              <button
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                type="button"
+              >
+                Get started
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <footer className="py-8 text-center text-sm text-gray-500">
+          © {new Date().getFullYear()} StudyMatch. Built for hackathons.
+        </footer>
+      </div>
+    </main>
   );
 }
