@@ -8,19 +8,20 @@ type Match = {
     createdAt: string;
 };
 
-type Props = { params: { id: string } };
-
 async function getMatches(userId: string): Promise<Match[]> {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/matches/${userId}`, {
-        cache: "no-store",
-    });
+    const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+    const res = await fetch(`${base}/api/matches/${userId}`, { cache: "no-store" });
     if (!res.ok) throw new Error("Failed to fetch matches");
     const json = await res.json();
     return json.data as Match[];
 }
 
-export default async function MatchPage({ params }: Props) {
-    const { id } = params;
+export default async function MatchPage({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}) {
+    const { id } = await params;
     const matches = await getMatches(id);
 
     return (
