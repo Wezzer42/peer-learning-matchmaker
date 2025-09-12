@@ -29,7 +29,7 @@ function parseLabels(input: string): string[] {
 }
 
 export default function OnboardingPage() {
-    const { data: session, status } = useSession();
+    const { status } = useSession();
     const router = useRouter();
 
     const [suggestions, setSuggestions] = useState<CatalogSubject[]>([]);

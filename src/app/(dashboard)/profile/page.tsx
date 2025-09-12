@@ -2,6 +2,10 @@ import { getServerAuthSession } from "@/lib/auth";
 import { Suspense } from "react";
 import { SignInGate } from "../matches/sign-in-gate";
 import { SubjectsEditor } from "./subjects-editor";
+import Image from "next/image";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function ProfilePage() {
     const session = await getServerAuthSession();
@@ -14,11 +18,14 @@ export default async function ProfilePage() {
             <div className="rounded-xl border p-4 space-y-3">
                 <div className="flex items-center gap-3">
                     {session.user.image ? (
-                        <img
-                            src={session.user.image}
-                            alt={session.user.name ?? "User"}
-                            className="h-12 w-12 rounded-full border"
-                        />
+                      <Image
+                        src={session.user.image}
+                        alt={session.user.name ?? "User"}
+                        width={48}
+                        height={48}
+                        className="rounded-full border"
+                        priority
+                      />
                     ) : null}
                     <div className="text-sm">
                         <div className="font-medium">{session.user.name ?? "Unnamed"}</div>
@@ -37,5 +44,4 @@ export default async function ProfilePage() {
     );
 }
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+

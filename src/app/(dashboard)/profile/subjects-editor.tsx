@@ -6,19 +6,17 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const SubjectSchema = z.object({
-    id: z.string(),
-    label: z.string(),
-    level: z.number().int().min(1).max(5).optional(),
-    createdAt: z.string(),
-});
-type Subject = z.infer<typeof SubjectSchema>;
+type Subject = {
+   id: string;
+   label: string;
+   level?: number;
+   createdAt: string;
+};
 
 const CreateSchema = z.object({
     label: z.string().min(1, "Label is required"),
     level: z.number().int().min(1).max(5).optional(),
-});
-type CreatePayload = z.infer<typeof CreateSchema>;
+ });
 
 export function SubjectsEditor() {
     const [items, setItems] = useState<Subject[]>([]);

@@ -3,6 +3,9 @@ import GoogleSignin from "@/components/google-signin";
 import { getServerAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function LandingPage() {
   const session = await getServerAuthSession();
   if (session?.user) redirect("/onboarding");

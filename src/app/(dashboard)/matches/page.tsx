@@ -3,6 +3,9 @@ import { Suspense } from "react";
 import { MatchesList } from "./matches-list";
 import { SignInGate } from "./sign-in-gate";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // Minimal shared type for rendering; keep in sync with API output
 type Match = {
     id: string;
@@ -59,6 +62,3 @@ export default async function MatchesPage() {
         </section>
     );
 }
-
-export const dynamic = "force-dynamic";
-export const revalidate = 0;

@@ -2,6 +2,9 @@ import { getServerAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Toaster } from "sonner";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
     const session = await getServerAuthSession();
     if (!session?.user) redirect("/");
