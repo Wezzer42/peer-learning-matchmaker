@@ -8,39 +8,35 @@ export const revalidate = 0;
 
 const svc = makeSubjectsCatalogService(getSubjectsCatalog());
 
-// GET /api/subjects?q=react
-export async function GET(req: NextRequest) {
-    const q = new URL(req.url).searchParams.get("q") ?? undefined;
-    const data = await svc.list(q);
-    return NextResponse.json({ ok: true, data });
-}
+type Ctx = { params: { id: string } };
 
-// POST /api/subjects
-// PUT /api/subjects  (bulk replace)
-export async function POST(req: NextRequest) {
+// PATCH /api/subjects/:id
+export async function PATCH(req: NextRequest, { params }: Ctx) {
     const session = await getServerAuthSession();
     if (!session?.user?.id) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 
     const raw = await req.json();
     try {
-        const created = await svc.add(raw, session.user.id);
-        return NextResponse.json({ ok: true, data: created }, { status: 201 });
+        const updated = await svc.update(params.id, raw);
+        return NextResponse.json({ ok: true, data: updated });
     } catch (e) {
         const msg = e instanceof Error ? e.message : "Invalid input";
-        return NextResponse.json({ ok: false, error: msg }, { status: 400 });
+        const code = msg.includes("not found") ? 404 : 400;
+        return NextResponse.json({ ok: false, error: msg }, { status: code });
     }
 }
 
-export async function PUT(req: NextRequest) {
+// DELETE /api/subjects/:id
+export async function DELETE(_req: NextRequest, { params }: Ctx) {
     const session = await getServerAuthSession();
     if (!session?.user?.id) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 
-    const raw = await req.json();
     try {
-        const next = await svc.setAll(raw, session.user.id);
-        return NextResponse.json({ ok: true, data: next });
+        await svc.remove(params.id);
+        return NextResponse.json({ ok: true });
     } catch (e) {
         const msg = e instanceof Error ? e.message : "Invalid input";
-        return NextResponse.json({ ok: false, error: msg }, { status: 400 });
+        const code = msg.includes("not found") ? 404 : 400;
+        return NextResponse.json({ ok: false, error: msg }, { status: code });
     }
 }

@@ -16,7 +16,7 @@ const Body = z.object({
     score: z.number().min(0).max(1).optional(),
 });
 
-type Ctx = { params: { userId: string } };
+type Ctx = { params: Promise<{ userId: string }> };
 
 export async function POST(req: NextRequest, { params }: Ctx) {
     const raw = await req.json();
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         return NextResponse.json({ ok: false, error: msg }, { status: 400 });
     }
 
-    const { userId } = params;
+    const { userId } = await params;
     const { type, matchId, bUserId, topic, score } = parsed.data;
 
     if (type === "accept") {
