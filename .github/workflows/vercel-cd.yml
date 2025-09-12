@@ -1,0 +1,121 @@
+name: Vercel CD
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+  NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+
+jobs:
+  deploy-preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Vercel pull (preview)
+        run: vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
+        env:
+          VERCEL_TOKEN: ${{ env.VERCEL_TOKEN }}
+
+      - name: Vercel build (preview)
+        run: |
+          vercel build \
+            --token=$VERCEL_TOKEN \
+            --env NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+            --env GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
+            --env GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET"
+        env:
+          VERCEL_TOKEN: ${{ env.VERCEL_TOKEN }}
+
+      - name: Vercel deploy (preview)
+        id: deploy
+        run: |
+          URL=$(vercel deploy --prebuilt --token=$VERCEL_TOKEN \
+            --env NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+            --env GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
+            --env GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET")
+          echo "url=$URL" >> $GITHUB_OUTPUT
+        env:
+          VERCEL_TOKEN: ${{ env.VERCEL_TOKEN }}
+
+      - name: Comment preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.url }}';
+            core.summary.addRaw(`Preview: ${url}`).write();
+            if (context.payload.pull_request) {
+              github.rest.issues.createComment({
+                issue_number: context.payload.pull_request.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `Preview deployed: ${url}`
+              });
+            }
+
+  deploy-production:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Vercel pull (production)
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+        env:
+          VERCEL_TOKEN: ${{ env.VERCEL_TOKEN }}
+
+      - name: Vercel build (production)
+        run: |
+          vercel build --prod \
+            --token=$VERCEL_TOKEN \
+            --env NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+            --env GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
+            --env GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" \
+            $( [ -n "$NEXTAUTH_URL" ] && echo --env NEXTAUTH_URL="$NEXTAUTH_URL" )
+        env:
+          VERCEL_TOKEN: ${{ env.VERCEL_TOKEN }}
+
+      - name: Vercel deploy (production)
+        id: deploy
+        run: |
+          URL=$(vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN \
+            --env NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+            --env GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
+            --env GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" \
+            $( [ -n "$NEXTAUTH_URL" ] && echo --env NEXTAUTH_URL="$NEXTAUTH_URL" ))
+          echo "url=$URL" >> $GITHUB_OUTPUT
+        env:
+          VERCEL_TOKEN: ${{ env.VERCEL_TOKEN }}
+
+      - name: Summary
+        run: echo "Production URL: ${{ steps.deploy.outputs.url }}"
