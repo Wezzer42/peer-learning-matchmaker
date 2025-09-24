@@ -1,10 +1,10 @@
 import { makeMatchService } from "@/domain/match/service";
-import { MemoryStore } from "@/lib/datastore/memory";
+import { MemoryMatchStore } from "@/lib/datastore/memory";
 import { describe, expect, it } from "vitest";
 
 describe("matches API service", () => {
     it("creates and lists matches", async () => {
-        const svc = makeMatchService(new MemoryStore());
+        const svc = makeMatchService(new MemoryMatchStore());
         const created = await svc.create({
             aUserId: "u1", bUserId: "u2", topic: "react", score: 0.92
         });

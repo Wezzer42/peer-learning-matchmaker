@@ -9,10 +9,10 @@ export const revalidate = 0;
 const svc = makeMatchService(getStore());
 
 async function ensureSuggestions(userId: string, limit = 20) {
-  const mine = await prisma.userSubject.findMany({ where: { userId } });
+  const mine = await prisma.userSubject.findMany({ where: { userId }, select: { label: true, level: true } });
   if (mine.length === 0) return;
 
-  const labels = Array.from(new Set(mine.map(s => s.label)));
+  const labels = Array.from(new Set(mine.map((s) => s.label)));
   const others = await prisma.userSubject.findMany({
     where: { label: { in: labels }, userId: { not: userId } },
     select: { userId: true, label: true, level: true },
