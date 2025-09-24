@@ -1,10 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const sessionBox = vi.hoisted(() => ({ value: null as any }));
+const envBox = vi.hoisted(() => ({ provider: process.env.DATABASE_PROVIDER, url: process.env.DATABASE_URL }));
 
 vi.mock("@/lib/auth", () => ({
     getServerAuthSession: vi.fn(() => Promise.resolve(sessionBox.value)),
 }));
+
+vi.mock("@/lib/subjects-catalog", async (orig) => {
+    const actual = (await orig()) as typeof import("@/lib/subjects-catalog");
+    return {
+        ...actual,
+        getSubjectsCatalog: () => actual.getSubjectsCatalog(),
+    };
+});
 
 function jsonRequest(method: string, url: string, body?: unknown): Request {
     return new Request(url, {
@@ -18,9 +27,25 @@ describe("/api/subjects (catalog)", () => {
     beforeEach(() => {
         vi.resetModules();
         sessionBox.value = null; // default: anonymous
+        envBox.provider = process.env.DATABASE_PROVIDER;
+        envBox.url = process.env.DATABASE_URL;
+        process.env.DATABASE_PROVIDER = "sqlite";
+        process.env.DATABASE_URL = "file:./test.db";
+        process.env.USE_MEMORY_STORE = "1";
     });
 
     afterEach(() => {
+        if (envBox.provider === undefined) {
+            delete process.env.DATABASE_PROVIDER;
+        } else {
+            process.env.DATABASE_PROVIDER = envBox.provider;
+        }
+        if (envBox.url === undefined) {
+            delete process.env.DATABASE_URL;
+        } else {
+            process.env.DATABASE_URL = envBox.url;
+        }
+        delete process.env.USE_MEMORY_STORE;
         vi.clearAllMocks();
     });
 
