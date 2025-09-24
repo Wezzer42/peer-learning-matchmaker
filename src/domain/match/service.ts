@@ -10,13 +10,16 @@ export function makeMatchService(ds: DataStore) {
         async list(query: { userId?: string; topic?: string }) {
             return ds.listMatches(query);
         },
-        async markAccepted(matchId: string, _userId: string) {
-            const updated = await ds.updateMatch(matchId, { status: "accepted" });
+    async markAccepted(matchId: string, userId: string) {
+      // record per-user decision
+      // @ts-expect-error: extended method on our stores
+      const updated = await ds.setDecision(matchId, userId, "accepted");
             if (!updated) throw new Error("Match not found");
             return updated;
         },
-        async markRejected(matchId: string, _userId: string) {
-            const updated = await ds.updateMatch(matchId, { status: "rejected" });
+    async markRejected(matchId: string, userId: string) {
+      // @ts-expect-error: extended method on our stores
+      const updated = await ds.setDecision(matchId, userId, "rejected");
             if (!updated) throw new Error("Match not found");
             return updated;
         },

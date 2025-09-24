@@ -34,9 +34,11 @@ export default function OnboardingPage() {
 
     const [suggestions, setSuggestions] = useState<CatalogSubject[]>([]);
     const [selected, setSelected] = useState<string[]>([]);
+    const [levels, setLevels] = useState<Record<string, number>>({});
     const [custom, setCustom] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
+    const [prefilled, setPrefilled] = useState(false);
 
     // If not signed in, show a gate
     useEffect(() => {
@@ -58,8 +60,28 @@ export default function OnboardingPage() {
             });
     }, []);
 
+    // Prefill user's existing subjects and levels
+    useEffect(() => {
+        if (prefilled) return;
+        fetch("/api/me/subjects", { cache: "no-store" })
+            .then(r => r.json())
+            .then((j: { ok: boolean; data: { label: string; level?: number }[] }) => {
+                if (!j?.ok || !Array.isArray(j.data)) return;
+                const labels = Array.from(new Set(j.data.map(s => s.label)));
+                if (labels.length === 0) return;
+                setSelected(labels);
+                setLevels(Object.fromEntries(labels.map(l => [l, (j.data.find(s => s.label === l)?.level ?? 3)])));
+                setPrefilled(true);
+            })
+            .catch(() => {});
+    }, [prefilled]);
+
     function toggle(label: string) {
-        setSelected(prev => (prev.includes(label) ? prev.filter(x => x !== label) : [...prev, label]));
+        setSelected(prev => {
+            const next = prev.includes(label) ? prev.filter(x => x !== label) : [...prev, label];
+            return next;
+        });
+        setLevels(prev => (prev[label] ? prev : { ...prev, [label]: 3 }));
     }
 
     function addCustom() {
@@ -70,8 +92,8 @@ export default function OnboardingPage() {
     }
 
     const payload: SubjectItem[] = useMemo(
-        () => selected.map(label => ({ label })), // default level omitted
-        [selected]
+        () => selected.map(label => ({ label, level: levels[label] ?? 3 })),
+        [selected, levels]
     );
 
     async function onSave() {
@@ -153,19 +175,29 @@ export default function OnboardingPage() {
             {selected.length > 0 && (
                 <div className="space-y-1">
                     <p className="text-sm">Selected:</p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="space-y-2">
                         {selected.map(label => (
-                            <span key={label} className="rounded-full border px-3 py-1 text-sm">
-                                {label}{" "}
+                            <div key={label} className="flex items-center gap-2">
+                                <span className="rounded-full border px-3 py-1 text-sm min-w-[120px] inline-block text-center">{label}</span>
+                                <label className="text-xs opacity-70">level</label>
+                                <input
+                                    type="range"
+                                    min={1}
+                                    max={5}
+                                    step={1}
+                                    value={levels[label] ?? 3}
+                                    onChange={e => setLevels(prev => ({ ...prev, [label]: Number(e.target.value) }))}
+                                />
+                                <span className="text-xs w-5 text-center">{levels[label] ?? 3}</span>
                                 <button
                                     type="button"
-                                    className="opacity-70 hover:opacity-100"
+                                    className="opacity-70 hover:opacity-100 text-sm"
                                     onClick={() => toggle(label)}
                                     aria-label={`Remove ${label}`}
                                 >
                                     ×
                                 </button>
-                            </span>
+                            </div>
                         ))}
                     </div>
                 </div>
