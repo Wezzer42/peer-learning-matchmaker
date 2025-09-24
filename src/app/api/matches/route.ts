@@ -13,12 +13,12 @@ async function ensureSuggestions(userId: string) {
   try {
     const mine = await prisma.userSubject.findMany({ where: { userId } });
     if (mine.length === 0) return;
-    const labels = Array.from(new Set(mine.map(s => s.label)));
+    const labels = Array.from(new Set(mine.map((s: { label: string; level: number | null }) => s.label)));
     const others = await prisma.userSubject.findMany({
       where: { label: { in: labels }, userId: { not: userId } },
       select: { userId: true, label: true, level: true },
     });
-    const myLevel = new Map(mine.map(s => [s.label, s.level ?? undefined] as const));
+    const myLevel = new Map(mine.map((s: { label: string; level: number | null }) => [s.label, s.level ?? undefined] as const));
     // build candidates for ALL shared labels (not only best)
     const candMap = new Map<string, { otherId: string; label: string; score: number }>();
     const keyOf = (label: string, u1: string, u2: string) => `${label}|${[u1, u2].sort().join("|")}`;
@@ -89,13 +89,13 @@ export async function GET(req: NextRequest) {
   }
   const userIds = Array.from(new Set(list.flatMap(m => [m.aUserId, m.bUserId])));
   const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, email: true } });
-  const nameById = new Map<string, string>(users.map(u => [u.id, u.name ?? u.id]));
-  const emailById = new Map<string, string>(users.map(u => [u.id, u.email ?? ""]));
+  const nameById = new Map<string, string>(users.map((u: { id: string; name: string | null; email: string | null }) => [u.id, u.name ?? u.id]));
+  const emailById = new Map<string, string>(users.map((u: { id: string; name: string | null; email: string | null }) => [u.id, u.email ?? ""]));
   const ids = list.map(m => m.id);
   const metaRaw = await prisma.match.findMany({ where: { id: { in: ids } } });
   type DecisionVal = "pending" | "accepted" | "rejected";
   type Decisions = { aDecision?: DecisionVal; bDecision?: DecisionVal };
-  const byId = new Map<string, Decisions>(metaRaw.map(r => {
+  const byId = new Map<string, Decisions>(metaRaw.map((r: { id: string; [key: string]: unknown }) => {
     const rec = r as unknown as { id: string; aDecision: DecisionVal | null; bDecision: DecisionVal | null };
     return [rec.id, { aDecision: rec.aDecision ?? "pending", bDecision: rec.bDecision ?? "pending" }];
   }));
