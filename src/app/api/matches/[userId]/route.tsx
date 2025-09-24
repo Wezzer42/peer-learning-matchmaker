@@ -87,7 +87,7 @@ export async function GET(
   type DecisionVal = "pending" | "accepted" | "rejected";
   type Decisions = { aDecision?: DecisionVal; bDecision?: DecisionVal };
   const rowsRaw = await prisma.match.findMany({ where: { id: { in: list.map(m => m.id) } } });
-  const decisions = new Map<string, Decisions>(rowsRaw.map((r: any) => {
+  const decisions = new Map<string, Decisions>(rowsRaw.map((r: { id: string; [key: string]: unknown }) => {
     const rec = r as unknown as { id: string; aDecision: DecisionVal | null; bDecision: DecisionVal | null };
     return [rec.id, { aDecision: rec.aDecision ?? "pending", bDecision: rec.bDecision ?? "pending" }];
   }));
