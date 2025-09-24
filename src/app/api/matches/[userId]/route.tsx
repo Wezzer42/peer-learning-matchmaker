@@ -12,14 +12,14 @@ async function ensureSuggestions(userId: string, limit = 20) {
   const mine = await prisma.userSubject.findMany({ where: { userId }, select: { label: true, level: true } });
   if (mine.length === 0) return;
 
-  const labels = Array.from(new Set(mine.map((s) => s.label)));
+  const labels = Array.from(new Set(mine.map((s: { label: string; level: number | null }) => s.label)));
   const others = await prisma.userSubject.findMany({
     where: { label: { in: labels }, userId: { not: userId } },
     select: { userId: true, label: true, level: true },
   });
   if (others.length === 0) return;
 
-  const myLevelByLabel = new Map(mine.map(s => [s.label, s.level ?? undefined] as const));
+  const myLevelByLabel = new Map(mine.map((s: { label: string; level: number | null }) => [s.label, s.level ?? undefined] as const));
 
   type Cand = { otherId: string; topic: string; score: number };
   const cands: Cand[] = [];
