@@ -80,18 +80,18 @@ export async function GET(
   }
   const list = await svc.list({ userId, topic: topic || undefined });
   // enrich with names and emails & decisions
-  const userIds = Array.from(new Set(list.flatMap(m => [m.aUserId, m.bUserId])));
+  const userIds = Array.from(new Set(list.flatMap((m: { aUserId: string; bUserId: string }) => [m.aUserId, m.bUserId])));
   const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, email: true } });
   const nameById = new Map<string, string>(users.map((u: { id: string; name: string | null; email: string | null }) => [u.id, u.name ?? u.id]));
   const emailById = new Map<string, string>(users.map((u: { id: string; name: string | null; email: string | null }) => [u.id, u.email ?? ""]));
   type DecisionVal = "pending" | "accepted" | "rejected";
   type Decisions = { aDecision?: DecisionVal; bDecision?: DecisionVal };
-  const rowsRaw = await prisma.match.findMany({ where: { id: { in: list.map(m => m.id) } } });
+  const rowsRaw = await prisma.match.findMany({ where: { id: { in: list.map((m: { id: string }) => m.id) } } });
   const decisions = new Map<string, Decisions>(rowsRaw.map((r: { id: string; [key: string]: unknown }) => {
     const rec = r as unknown as { id: string; aDecision: DecisionVal | null; bDecision: DecisionVal | null };
     return [rec.id, { aDecision: rec.aDecision ?? "pending", bDecision: rec.bDecision ?? "pending" }];
   }));
-  const data = list.map(m => {
+  const data = list.map((m: { id: string; aUserId: string; bUserId: string; topic: string; score: number; status?: string; createdAt: string }) => {
     const metaRow = decisions.get(m.id);
     const aDec = metaRow?.aDecision;
     const bDec = metaRow?.bDecision;

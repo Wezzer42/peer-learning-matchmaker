@@ -24,7 +24,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
     if (!parsed.success) {
         const msg = parsed.error.issues
-            .map(i => `${i.path.join(".") || "(root)"}: ${i.message}`)
+            .map((i: { path: PropertyKey[]; message: string }) => `${i.path.join(".") || "(root)"}: ${i.message}`)
             .join("; ");
         return NextResponse.json({ ok: false, error: msg }, { status: 400 });
     }

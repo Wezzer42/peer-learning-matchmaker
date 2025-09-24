@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     orderBy: { label: "asc" },
     take: 200,
   });
-  const fallback = userDistinct.map((r) => ({ id: r.label, label: r.label, level: null, createdAt: new Date() }));
+  const fallback = userDistinct.map((r: { label: string }) => ({ id: r.label, label: r.label, level: null, createdAt: new Date() }));
   return NextResponse.json({ ok: true, data: fallback });
 }
 
