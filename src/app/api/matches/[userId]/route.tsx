@@ -82,8 +82,8 @@ export async function GET(
   // enrich with names and emails & decisions
   const userIds = Array.from(new Set(list.flatMap(m => [m.aUserId, m.bUserId])));
   const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, email: true } });
-  const nameById = new Map<string, string>(users.map(u => [u.id, u.name ?? u.id]));
-  const emailById = new Map<string, string>(users.map(u => [u.id, u.email ?? ""]));
+  const nameById = new Map<string, string>(users.map((u: { id: string; name: string | null; email: string | null }) => [u.id, u.name ?? u.id]));
+  const emailById = new Map<string, string>(users.map((u: { id: string; name: string | null; email: string | null }) => [u.id, u.email ?? ""]));
   type DecisionVal = "pending" | "accepted" | "rejected";
   type Decisions = { aDecision?: DecisionVal; bDecision?: DecisionVal };
   const rowsRaw = await prisma.match.findMany({ where: { id: { in: list.map(m => m.id) } } });
