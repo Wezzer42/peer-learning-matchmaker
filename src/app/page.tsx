@@ -28,12 +28,6 @@ export default async function LandingPage() {
             <p className="mt-4 text-lg text-gray-600">
               Pick what you want to learn and what you can teach. We’ll match you by topics and timezones.
             </p>
-            <div className="mt-8 sm:hidden">
-              <GoogleSignin />
-            </div>
-            <div className="mt-8 hidden sm:flex">
-              <GoogleSignin />
-            </div>
             <ul className="mt-6 space-y-2 text-sm text-gray-600">
               <li>• Google login, no passwords</li>
               <li>• Learn/Teach subject picker</li>
@@ -62,12 +56,6 @@ export default async function LandingPage() {
 
             <div className="mt-6 flex items-center justify-between">
               <div className="h-3 w-24 rounded bg-gray-200" />
-              <button
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                type="button"
-              >
-                Get started
-              </button>
             </div>
           </div>
         </section>
