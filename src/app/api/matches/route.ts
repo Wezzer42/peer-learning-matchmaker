@@ -47,7 +47,7 @@ async function ensureSuggestions(userId: string) {
       select: { id: true, aUserId: true, bUserId: true, topic: true, score: true },
     });
     const hasKey = new Set(existing.map((r: { topic: string; aUserId: string; bUserId: string }) => keyOf(r.topic, r.aUserId, r.bUserId)));
-    const toCreate = candidates.filter(c => !hasKey.has(keyOf(c.label, userId, c.otherId)));
+    const toCreate = candidates.filter((c: { otherId: string; label: string; score: number }) => !hasKey.has(keyOf(c.label, userId, c.otherId)));
     if (toCreate.length) {
       await prisma.match.createMany({
         data: toCreate.map((c: { otherId: string; label: string; score: number }) => ({ aUserId: userId, bUserId: c.otherId, topic: c.label, score: c.score, status: "pending" })),
@@ -56,7 +56,7 @@ async function ensureSuggestions(userId: string) {
     // Recalculate score for existing pairs if changed
     if (existing.length) {
       const candByKey = new Map(candidates.map((c: { otherId: string; label: string; score: number }) => [keyOf(c.label, userId, c.otherId), c]));
-      const toUpdate = existing.filter(r => {
+      const toUpdate = existing.filter((r: { topic: string; aUserId: string; bUserId: string; id: string; score: number | null }) => {
         const cand = candByKey.get(keyOf(r.topic, r.aUserId, r.bUserId));
         return cand && Math.abs((cand.score ?? 0) - (r.score ?? 0)) > 1e-6;
       });
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
   if (!topic) {
     const myLabels = await prisma.userSubject.findMany({ where: { userId }, select: { label: true } });
     const allow = new Set<string>(myLabels.map((x: { label: string }) => x.label));
-    list = list.filter(m => allow.has(m.topic));
+    list = list.filter((m: { topic: string }) => allow.has(m.topic));
   }
   const userIds = Array.from(new Set(list.flatMap((m: { aUserId: string; bUserId: string }) => [m.aUserId, m.bUserId])));
   const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, email: true } });
