@@ -43,13 +43,15 @@ export class MemorySubjectsStore implements SubjectsStore {
 
     async setAll(userId: string, items: Array<{ label: string; level?: number }>): Promise<Subject[]> {
         const now = new Date().toISOString();
-        const next: Subject[] = items.map(it => ({
-            id: crypto.randomUUID(),
-            userId,
-            label: it.label,
-            level: it.level,
-            createdAt: now,
-        }));
+        const prev = this.byUser.get(userId) ?? [];
+        const prevByLabel = new Map(prev.map(s => [s.label, s] as const));
+        const next: Subject[] = items.map(it => {
+            const existed = prevByLabel.get(it.label);
+            const id = existed?.id ?? crypto.randomUUID();
+            const createdAt = existed?.createdAt ?? now;
+            const level = it.level !== undefined ? it.level : existed?.level;
+            return { id, userId, label: it.label, level, createdAt };
+        });
         this.byUser.set(userId, next);
         return next;
     }

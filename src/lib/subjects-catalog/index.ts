@@ -1,10 +1,11 @@
+import { PrismaSubjectsCatalog } from "./prisma";
 import { MemorySubjectsCatalog } from "./memory";
 import type { SubjectsCatalogStore } from "./types";
 
-let store: SubjectsCatalogStore | null = null;
-
-// Swap this to a Prisma-backed store later
+let _cat: SubjectsCatalogStore | null = null;
 export function getSubjectsCatalog(): SubjectsCatalogStore {
-    if (!store) store = new MemorySubjectsCatalog();
-    return store;
+  if (_cat) return _cat;
+  const useMemory = process.env.NODE_ENV === "test" || process.env.USE_MEMORY_STORE === "1";
+  _cat = useMemory ? new MemorySubjectsCatalog() : new PrismaSubjectsCatalog();
+  return _cat;
 }

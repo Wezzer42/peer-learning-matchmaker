@@ -1,8 +1,9 @@
-import { getServerAuthSession } from "@/lib/auth";
 import { Suspense } from "react";
 import { SignInGate } from "../matches/sign-in-gate";
 import { SubjectsEditor } from "./subjects-editor";
-import Image from "next/image";
+import SignOutButton from "@/components/auth/signout-button";
+import { getServerAuthSession } from "@/lib/auth";
+import { UserHeader } from "./user-header";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -15,32 +16,16 @@ export default async function ProfilePage() {
         <section className="p-6 space-y-6">
             <h1 className="text-2xl font-semibold">Profile</h1>
 
-            <div className="rounded-xl border p-4 space-y-3">
-                <div className="flex items-center gap-3">
-                    {session.user.image ? (
-                      <Image
-                        src={session.user.image}
-                        alt={session.user.name ?? "User"}
-                        width={48}
-                        height={48}
-                        className="rounded-full border"
-                        priority
-                      />
-                    ) : null}
-                    <div className="text-sm">
-                        <div className="font-medium">{session.user.name ?? "Unnamed"}</div>
-                        <div className="opacity-70">{session.user.email ?? "No email"}</div>
-                        {"id" in session.user && session.user.id ? (
-                            <div className="text-xs opacity-60">id: {String(session.user.id)}</div>
-                        ) : null}
-                    </div>
-                </div>
-            </div>
+            <UserHeader />
 
             <Suspense fallback={<div>Loading…</div>}>
                 <SubjectsEditor />
             </Suspense>
+            <div className="pt-4 border-t flex justify-end">
+                        <SignOutButton redirectTo="/" />
+            </div>
         </section>
+
     );
 }
 

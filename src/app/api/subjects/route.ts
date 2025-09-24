@@ -2,17 +2,40 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerAuthSession } from "@/lib/auth";
 import { getSubjectsCatalog } from "@/lib/subjects-catalog";
 import { makeSubjectsCatalogService } from "@/domain/subjects-catalog/service";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+const norm = (s: string) => s.trim().toLowerCase();
 
 const svc = makeSubjectsCatalogService(getSubjectsCatalog());
 
 // GET /api/subjects?q=react
 export async function GET(req: NextRequest) {
-  const q = new URL(req.url).searchParams.get("q") ?? undefined;
-  const data = await svc.list(q);
-  return NextResponse.json({ ok: true, data });
+  const raw = new URL(req.url).searchParams.get("q");
+  const q = raw && raw.trim().length > 0 ? norm(raw) : undefined;
+
+  // 1) primary: catalog
+  const where = q ? { label: { contains: q } } : undefined; // без mode для sqlite
+  const cat = await prisma.publicSubject.findMany({
+    where,
+    orderBy: { label: "asc" },
+    take: 200,
+  });
+  if (cat.length > 0) {
+    return NextResponse.json({ ok: true, data: cat });
+  }
+
+  // 2) fallback: distinct labels из userSubject
+  const userDistinct = await prisma.userSubject.findMany({
+    distinct: ["label"],
+    where: q ? { label: { contains: q } } : undefined,
+    select: { label: true },
+    orderBy: { label: "asc" },
+    take: 200,
+  });
+  const fallback = userDistinct.map((r) => ({ id: r.label, label: r.label, level: null, createdAt: new Date() }));
+  return NextResponse.json({ ok: true, data: fallback });
 }
 
 // POST /api/subjects

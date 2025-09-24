@@ -1,9 +1,13 @@
-import { MemoryStore } from "./memory";
-import type { DataStore } from "./types";
+// Factory that returns a DataStore (Prisma in normal env, Memory in tests)
+import type { DataStore } from "@/domain/match/types";
+import { PrismaMatchStore } from "./prisma";
+import { MemoryMatchStore } from "./memory";
 
-let store: DataStore;
+let _store: DataStore | null = null;
 
 export function getStore(): DataStore {
-    if (!store) store = new MemoryStore();
-    return store;
+  if (_store) return _store;
+  const useMemory = process.env.NODE_ENV === "test" || process.env.USE_MEMORY_STORE === "1";
+  _store = useMemory ? new MemoryMatchStore() : new PrismaMatchStore();
+  return _store;
 }
